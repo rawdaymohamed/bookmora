@@ -13,11 +13,25 @@ datasource db {
 }
 
 model Business {
-  id               String   @id @default(cuid())
-  ownerClerkUserId String   @unique
+  services         Service[]
+  id               String    @id @default(cuid())
+  ownerClerkUserId String    @unique
   name             String
-  slug             String   @unique
+  slug             String    @unique
   timezone         String
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Service {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  name            String
+  durationMinutes Int
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([businessId, isActive])
 }

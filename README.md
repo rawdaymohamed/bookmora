@@ -26,3 +26,25 @@ Ownership always comes from the verified session. Client-supplied IDs, owner IDs
 Run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`.
 
 API tests mock Clerk sessions and Prisma calls, and cover authentication, owner isolation, uniqueness conflicts, validation, and onboarding. A real Clerk sign-up/sign-in and database migration smoke test require configured credentials and a running PostgreSQL instance. Appointment booking and payments are outside this story.
+
+## Services
+
+After registering a business, visit `/owner/services` to create, edit, deactivate, or reactivate its services. The public page at `/book/[slug]` shows active services only and does not expose owner account details.
+
+- `GET /api/owner/services`: list the signed-in owner's services, including inactive ones.
+- `POST /api/owner/services`: create with `{ "name": "Consultation", "durationMinutes": 30 }`; active by default; returns 201.
+- `PATCH /api/owner/services/[id]`: update `name`, `durationMinutes`, or `isActive`; returns 200.
+
+Names must contain 1–120 characters after trimming. Duration must be a positive integer of minutes within PostgreSQL's integer range. Unknown fields and client-supplied ownership are rejected (400). Anonymous requests receive 401; missing or other owners' services receive 404. Owners must register their business before creating services.
+
+Apply the additive Service migration with `npm run db:migrate`, then regenerate the client with `npm run db:generate`. The database enforces the business foreign key and positive duration. Deactivation only sets `isActive: false`; the row and ID remain intact. There is no delete endpoint. Public reads are not persistently cached, so deactivation appears on the next page request.
+
+Historical-booking preservation remains a pending test until a Booking model exists. No booking model or booking API is introduced in this story. API tests mock Clerk and Prisma; UI tests cover creation, editing, deactivation, and server errors.
+
+## Public business page
+
+Customers can visit `/book/[slug]` without signing in to see the business name, timezone, active services, and durations. Old `/b/[slug]` links permanently redirect to the new route. Missing or malformed slugs use the booking not-found view; a business without active services has an explicit empty state. Slot selection is deferred to Sprint 2.
+
+`GET /api/public/[slug]` is anonymous and returns only `name`, `timezone`, and `services` containing `id`, `name`, and `durationMinutes`. The shared query filters inactive services in PostgreSQL. The API returns 404 for missing/invalid slugs and a generic 500 on database failure. Public reads bypass persistent caching so service changes appear on the next request.
+
+The UI uses shared neutral/teal styles, responsive owner navigation, labeled forms, keyboard focus indicators, loading feedback, and public-page previews. API and component tests run with `npm test`; historical-booking coverage remains pending until a Booking model exists.

@@ -68,3 +68,28 @@ it('shows a conflict without completing onboarding', async () => {
   );
   expect(screen.getByRole('button', { name: 'Create business' })).toBeEnabled();
 });
+
+it('offers a timezone selector, previews the public address, and links to services after creation', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }),
+  );
+  render(<BusinessForm business={null} />);
+  expect(screen.getByRole('combobox', { name: 'Timezone' })).toHaveValue(
+    'Africa/Cairo',
+  );
+  fireEvent.change(screen.getByLabelText('Business name'), {
+    target: { value: 'Studio' },
+  });
+  fireEvent.change(screen.getByLabelText('Business slug'), {
+    target: { value: 'my-studio' },
+  });
+  expect(screen.getByText('Your page: /book/my-studio')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Create business' }));
+  expect(
+    await screen.findByRole('link', { name: /Continue to services/ }),
+  ).toHaveAttribute('href', '/owner/services');
+  expect(
+    screen.getByRole('link', { name: /View your public page/ }),
+  ).toHaveAttribute('href', '/book/my-studio');
+});
