@@ -3,3 +3,6 @@ node_modules
 coverage
 package-lock.json
 src/generated
+
+# Installed agent skills are maintained upstream.
+.agents/skills/
