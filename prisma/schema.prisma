@@ -11,3 +11,13 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Business {
+  id               String   @id @default(cuid())
+  ownerClerkUserId String   @unique
+  name             String
+  slug             String   @unique
+  timezone         String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
